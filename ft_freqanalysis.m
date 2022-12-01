@@ -351,6 +351,21 @@ switch cfg.method
     cfg = ft_checkconfig(cfg, 'createtopcfg', 'superlet');
     cfg = removefields(cfg, 'superlet');
     cfg = ft_checkconfig(cfg, 'renamed', {'basewidth', 'width'});
+    cfg = ft_checkconfig(cfg, 'required', {'toi', 't_ftimwin'});
+    if ischar(cfg.toi)
+      begtim  = min(cellfun(@min,data.time));
+      endtim  = max(cellfun(@max,data.time));
+      if strcmp(cfg.toi, 'all') % each data sample gets a time window
+        cfg.toi = linspace(begtim, endtim, round((endtim-begtim) ./ ...
+          mean(diff(data.time{1})))+1);
+      elseif strcmp(cfg.toi(end), '%') % percent overlap between smallest time windows
+        overlap = str2double(cfg.toi(1:(end-1)))/100;
+        cfg.toi = linspace(begtim, endtim, round((endtim-begtim) ./ ...
+          (overlap * min(cfg.t_ftimwin))) + 1);
+      else
+        ft_error('cfg.toi should be either a numeric vector or a string: can be ''all'' or a percentage (e.g., ''50%'')');
+      end
+    end
     
     cfg.width   = ft_getopt(cfg, 'width',   3);
     cfg.gwidth  = ft_getopt(cfg, 'gwidth',  3);
